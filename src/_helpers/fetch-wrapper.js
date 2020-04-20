@@ -1,3 +1,4 @@
+import config from 'config';
 import { accountService } from '@/_services';
 
 export const fetchWrapper = {
@@ -10,7 +11,7 @@ export const fetchWrapper = {
 function get(url) {
     const requestOptions = {
         method: 'GET',
-        headers: authHeader()
+        headers: authHeader(url)
     };
     return fetch(url, requestOptions).then(handleResponse);
 }
@@ -18,7 +19,7 @@ function get(url) {
 function post(url, body) {
     const requestOptions = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeader() },
+        headers: { 'Content-Type': 'application/json', ...authHeader(url) },
         body: JSON.stringify(body)
     };
     return fetch(url, requestOptions).then(handleResponse);
@@ -27,7 +28,7 @@ function post(url, body) {
 function put(url, body) {
     const requestOptions = {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...authHeader() },
+        headers: { 'Content-Type': 'application/json', ...authHeader(url) },
         body: JSON.stringify(body)
     };
     return fetch(url, requestOptions).then(handleResponse);    
@@ -37,17 +38,19 @@ function put(url, body) {
 function _delete(url) {
     const requestOptions = {
         method: 'DELETE',
-        headers: authHeader()
+        headers: authHeader(url)
     };
     return fetch(url, requestOptions).then(handleResponse);
 }
 
 // helper functions
 
-function authHeader() {
-    // return authorization header with jwt token
+function authHeader(url) {
+    // return auth header with jwt if user is logged in and request is to the api url
     const user = accountService.userValue;
-    if (user && user.token) {
+    const isLoggedIn = user && user.token;
+    const isApiUrl = url.startsWith(config.apiUrl);
+    if (isLoggedIn && isApiUrl) {
         return { Authorization: `Bearer ${user.token}` };
     } else {
         return {};

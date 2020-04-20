@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Switch } from 'react-router-dom';
 
 import { Overview } from './Overview';
-import { Users } from './Users';
+import { Users } from './users';
 
 function Admin({ match }) {
     const { path } = match;
