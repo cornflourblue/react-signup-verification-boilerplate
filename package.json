@@ -12,6 +12,7 @@
     },
     "dependencies": {
         "formik": "^2.1.4",
+        "history": "^4.10.1",
         "prop-types": "^15.7.2",
         "query-string": "^6.11.0",
         "react": "^16.8.6",

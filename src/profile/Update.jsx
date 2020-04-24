@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -46,6 +46,15 @@ function Update({ history }) {
                 setSubmitting(false);
                 alertService.error(error);
             });
+    }
+
+    const [isDeleting, setIsDeleting] = useState(false);
+    function onDelete() {
+        if (confirm('Are you sure?')) {
+            setIsDeleting(true);
+            accountService.delete(user.id)
+                .then(() => alertService.success('Account deleted successfully'));
+        }
     }
 
     return (
@@ -96,9 +105,15 @@ function Update({ history }) {
                         </div>
                     </div>
                     <div className="form-group">
-                        <button type="submit" disabled={isSubmitting} className="btn btn-primary">
+                        <button type="submit" disabled={isSubmitting} className="btn btn-primary mr-2">
                             {isSubmitting && <span className="spinner-border spinner-border-sm mr-1"></span>}
                             Update
+                        </button>
+                        <button type="button" onClick={() => onDelete()} className="btn btn-danger" style={{ width: '75px' }} disabled={isDeleting}>
+                            {isDeleting
+                                ? <span className="spinner-border spinner-border-sm"></span>
+                                : <span>Delete</span>
+                            }
                         </button>
                         <Link to="." className="btn btn-link">Cancel</Link>
                     </div>

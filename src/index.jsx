@@ -1,7 +1,8 @@
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { Router } from 'react-router-dom';
 import { render } from 'react-dom';
 
+import { history } from './_helpers';
 import { App } from './app';
 
 import './styles.less';
@@ -11,8 +12,8 @@ import { configureFakeBackend } from './_helpers';
 configureFakeBackend();
 
 render(
-    <BrowserRouter>
+    <Router history={history}>
         <App />
-    </BrowserRouter>,
+    </Router>,
     document.getElementById('app')
 );

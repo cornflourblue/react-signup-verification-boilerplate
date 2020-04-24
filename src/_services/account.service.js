@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 
 import config from 'config';
-import { fetchWrapper } from '@/_helpers';
+import { fetchWrapper, history } from '@/_helpers';
 
 const userSubject = new BehaviorSubject(JSON.parse(localStorage.getItem('user')));
 const baseUrl = `${config.apiUrl}/accounts`;
@@ -37,9 +37,10 @@ function login(email, password) {
 }
 
 function logout() {
-    // remove user from local storage to log user out
+    // remove user from local storage and publish null to user subject
     localStorage.removeItem('user');
     userSubject.next(null);
+    history.push('/account/login');
 }
 
 function register(params) {
@@ -92,5 +93,12 @@ function update(id, params) {
 
 // prefixed with underscored because delete is a reserved word in javascript
 function _delete(id) {
-    return fetchWrapper.delete(`${baseUrl}/${id}`);
+    return fetchWrapper.delete(`${baseUrl}/${id}`)
+        .then(x => {
+            // auto logout if the logged in user deleted their own record
+            if (id === userSubject.value.id) {
+                logout();
+            }
+            return x;
+        });
 }

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
-import { alertService, AlertType } from '../_services';
+import { alertService, AlertType } from '@/_services';
+import { history } from '@/_helpers';
 
 const propTypes = {
     id: PropTypes.string,
@@ -15,7 +15,6 @@ const defaultProps = {
 };
 
 function Alert({ id, fade }) {
-    const history = useHistory();
     const [alerts, setAlerts] = useState([]);
 
     useEffect(() => {

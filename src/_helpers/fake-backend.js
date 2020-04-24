@@ -250,8 +250,16 @@ export function configureFakeBackend() {
             }
     
             function deleteUser() {
-                if (!isAuthorized(Role.Admin)) return unauthorized();
+                if (!isAuthenticated()) return unauthorized();
+    
+                let user = users.find(x => x.id === idFromUrl());
 
+                // users can delete own account and admins can delete any account
+                if (user.id !== idFromToken() && !isAuthorized(Role.Admin)) {
+                    return unauthorized();
+                }
+
+                // delete user then save
                 users = users.filter(x => x.id !== idFromUrl());
                 localStorage.setItem('users', JSON.stringify(users));
                 return ok();
