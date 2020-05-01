@@ -94,7 +94,7 @@ function ResetPassword({ history }) {
             case TokenStatus.Valid:
                 return getForm();
             case TokenStatus.Invalid:
-                return <div>Token validation failed, if the token has expired you can get a new one at the <Link to="/forgot-password">forgot password</Link> page.</div>;
+                return <div>Token validation failed, if the token has expired you can get a new one at the <Link to="forgot-password">forgot password</Link> page.</div>;
             case TokenStatus.Validating:
                 return <div>Validating token...</div>;
         }
