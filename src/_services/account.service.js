@@ -59,8 +59,8 @@ function validateResetToken(token) {
     return fetchWrapper.post(`${baseUrl}/validate-reset-token`, { token });
 }
 
-function resetPassword(token, password) {
-    return fetchWrapper.post(`${baseUrl}/reset-password`, { token, password });
+function resetPassword({ token, password, confirmPassword }) {
+    return fetchWrapper.post(`${baseUrl}/reset-password`, { token, password, confirmPassword });
 }
 
 function getAll() {

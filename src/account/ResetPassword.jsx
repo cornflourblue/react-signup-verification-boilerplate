@@ -47,11 +47,11 @@ function ResetPassword({ history }) {
                 .required('Confirm Password is required'),
         });
 
-        function onSubmit({ password }, { setSubmitting }) {
+        function onSubmit({ password, confirmPassword }, { setSubmitting }) {
             alertService.clear();
-            accountService.resetPassword(token, password)
+            accountService.resetPassword({ token, password, confirmPassword })
                 .then(() => {
-                    alertService.success('Password reset successful, you can now login.', { keepAfterRouteChange: true });
+                    alertService.success('Password reset successful, you can now login', { keepAfterRouteChange: true });
                     history.push('login');
                 })
                 .catch(error => {

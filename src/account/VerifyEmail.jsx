@@ -20,7 +20,7 @@ function VerifyEmail({ history }) {
 
         accountService.verifyEmail(token)
             .then(() => {
-                alertService.success('Verification successful, you can now login.', { keepAfterRouteChange: true });
+                alertService.success('Verification successful, you can now login', { keepAfterRouteChange: true });
                 history.push('login');
             })
             .catch(() => {

@@ -56,7 +56,7 @@ function AddEdit({ history, match }) {
                 alertService.success('User added successfully', { keepAfterRouteChange: true });
                 history.push('.');
             })
-            .catch(() => {
+            .catch(error => {
                 setSubmitting(false);
                 alertService.error(error);
             });
