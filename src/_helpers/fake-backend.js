@@ -2,7 +2,8 @@ import { Role } from './'
 import { alertService } from '@/_services';
 
 // array in local storage for registered users
-let users = JSON.parse(localStorage.getItem('users')) || [];
+const usersKey = 'react-signup-verification-boilerplate-users';
+const users = JSON.parse(localStorage.getItem(usersKey)) || [];
 
 export function configureFakeBackend() {
     let realFetch = window.fetch;
@@ -16,6 +17,10 @@ export function configureFakeBackend() {
                 switch (true) {
                     case url.endsWith('/accounts/authenticate') && method === 'POST':
                         return authenticate();
+                    case url.endsWith('/accounts/refresh-token') && method === 'POST':
+                        return refreshToken();
+                    case url.endsWith('/accounts/revoke-token') && method === 'POST':
+                        return revokeToken();
                     case url.endsWith('/accounts/register') && method === 'POST':
                         return register();
                     case url.endsWith('/accounts/verify-email') && method === 'POST':
@@ -49,7 +54,13 @@ export function configureFakeBackend() {
             function authenticate() {
                 const { email, password } = body();
                 const user = users.find(x => x.email === email && x.password === password && x.isVerified);
+
                 if (!user) return error('Email or password is incorrect');
+
+                // add refresh token to user
+                user.refreshTokens.push(generateRefreshToken());
+                localStorage.setItem(usersKey, JSON.stringify(users));
+
                 return ok({
                     id: user.id,
                     email: user.email,
@@ -57,8 +68,46 @@ export function configureFakeBackend() {
                     firstName: user.firstName,
                     lastName: user.lastName,
                     role: user.role,
-                    token: `fake-jwt-token.${user.role}.${user.id}`
+                    jwtToken: generateJwtToken(user)
                 });
+            }
+
+            function refreshToken() {
+                const refreshToken = getRefreshToken();
+                
+                if (!refreshToken) return unauthorized();
+
+                const user = users.find(x => x.refreshTokens.includes(refreshToken));
+                
+                if (!user) return unauthorized();
+
+                // replace old refresh token with a new one and save
+                user.refreshTokens = user.refreshTokens.filter(x => x !== refreshToken);
+                user.refreshTokens.push(generateRefreshToken());
+                localStorage.setItem(usersKey, JSON.stringify(users));
+
+                return ok({
+                    id: user.id,
+                    email: user.email,
+                    title: user.title,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    role: user.role,
+                    jwtToken: generateJwtToken(user)
+                })
+            }
+
+            function revokeToken() {
+                if (!isAuthenticated()) return unauthorized();
+                
+                const refreshToken = getRefreshToken();
+                const user = users.find(x => x.refreshTokens.includes(refreshToken));
+                
+                // revoke token and save
+                user.refreshTokens = user.refreshTokens.filter(x => x !== refreshToken);
+                localStorage.setItem(usersKey, JSON.stringify(users));
+
+                return ok();
             }
 
             function register() {
@@ -90,9 +139,10 @@ export function configureFakeBackend() {
                 user.dateCreated = new Date().toISOString();
                 user.verificationToken = new Date().getTime().toString();
                 user.isVerified = false;
+                user.refreshTokens = [];
                 delete user.confirmPassword;
                 users.push(user);
-                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem(usersKey, JSON.stringify(users));
 
                 // display verification email in alert
                 setTimeout(() => {
@@ -117,7 +167,7 @@ export function configureFakeBackend() {
                 
                 // set is verified flag to true if token is valid
                 user.isVerified = true;
-                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem(usersKey, JSON.stringify(users));
 
                 return ok();
             }
@@ -131,8 +181,8 @@ export function configureFakeBackend() {
                 
                 // create reset token that expires after 24 hours
                 user.resetToken = new Date().getTime().toString();
-                user.resetTokenExpiry = new Date(Date.now() + 24*60*60*1000).toISOString();
-                localStorage.setItem('users', JSON.stringify(users));
+                user.resetTokenExpires = new Date(Date.now() + 24*60*60*1000).toISOString();
+                localStorage.setItem(usersKey, JSON.stringify(users));
 
                 // display password reset email in alert
                 setTimeout(() => {
@@ -152,7 +202,7 @@ export function configureFakeBackend() {
                 const { token } = body();
                 const user = users.find(x =>
                     !!x.resetToken && x.resetToken === token &&
-                    new Date() < new Date(x.resetTokenExpiry)
+                    new Date() < new Date(x.resetTokenExpires)
                 );
                 
                 if (!user) return error('Invalid token');
@@ -164,7 +214,7 @@ export function configureFakeBackend() {
                 const { token, password } = body();
                 const user = users.find(x =>
                     !!x.resetToken && x.resetToken === token &&
-                    new Date() < new Date(x.resetTokenExpiry)
+                    new Date() < new Date(x.resetTokenExpires)
                 );
                 
                 if (!user) return error('Invalid token');
@@ -173,8 +223,8 @@ export function configureFakeBackend() {
                 user.password = password;
                 user.isVerified = true;
                 delete user.resetToken;
-                delete user.resetTokenExpiry;
-                localStorage.setItem('users', JSON.stringify(users));
+                delete user.resetTokenExpires;
+                localStorage.setItem(usersKey, JSON.stringify(users));
 
                 return ok();
             }
@@ -191,7 +241,7 @@ export function configureFakeBackend() {
                 let user = users.find(x => x.id === idFromUrl());
 
                 // users can get own profile and admins can get all profiles
-                if (user.id !== idFromToken() && !isAuthorized(Role.Admin)) {
+                if (user.id !== currentUser().id && !isAuthorized(Role.Admin)) {
                     return unauthorized();
                 }
 
@@ -212,7 +262,7 @@ export function configureFakeBackend() {
                 user.isVerified = true;
                 delete user.confirmPassword;
                 users.push(user);
-                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem(usersKey, JSON.stringify(users));
 
                 return ok();
             }
@@ -224,7 +274,7 @@ export function configureFakeBackend() {
                 let user = users.find(x => x.id === idFromUrl());
 
                 // users can update own profile and admins can update all profiles
-                if (user.id !== idFromToken() && !isAuthorized(Role.Admin)) {
+                if (user.id !== currentUser().id && !isAuthorized(Role.Admin)) {
                     return unauthorized();
                 }
 
@@ -237,7 +287,7 @@ export function configureFakeBackend() {
 
                 // update and save user
                 Object.assign(user, params);
-                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem(usersKey, JSON.stringify(users));
 
                 return ok({
                     id: user.id,
@@ -255,13 +305,13 @@ export function configureFakeBackend() {
                 let user = users.find(x => x.id === idFromUrl());
 
                 // users can delete own account and admins can delete any account
-                if (user.id !== idFromToken() && !isAuthorized(Role.Admin)) {
+                if (user.id !== currentUser().id && !isAuthorized(Role.Admin)) {
                     return unauthorized();
                 }
 
                 // delete user then save
                 users = users.filter(x => x.id !== idFromUrl());
-                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem(usersKey, JSON.stringify(users));
                 return ok();
             }
     
@@ -280,20 +330,18 @@ export function configureFakeBackend() {
             }
 
             function isAuthenticated() {
-                return (opts.headers['Authorization'] || '').startsWith('Bearer fake-jwt-token');
+                return !!currentUser();
             }
     
             function isAuthorized(role) {
-                return isAuthenticated() && opts.headers['Authorization'].split('.')[1] === role;
+                const user = currentUser();
+                if (!user) return false;
+                return user.role === role;
             }
     
             function idFromUrl() {
                 const urlParts = url.split('/');
                 return parseInt(urlParts[urlParts.length - 1]);
-            }
-
-            function idFromToken() {
-                return parseInt(opts.headers['Authorization'].split('.')[2]);
             }
 
             function body() {
@@ -302,6 +350,44 @@ export function configureFakeBackend() {
 
             function newUserId() {
                 return users.length ? Math.max(...users.map(x => x.id)) + 1 : 1;
+            }
+
+            function generateJwtToken(user) {
+                // create token that expires in 15 minutes
+                const tokenPayload = { 
+                    exp: Math.round(new Date(Date.now() + 15*60*1000).getTime() / 1000),
+                    id: user.id
+                }
+                return `fake-jwt-token.${btoa(JSON.stringify(tokenPayload))}`;
+            }
+
+            function currentUser() {
+                // check if jwt token is in auth header
+                const authHeader = opts.headers['Authorization'] || '';
+                if (!authHeader.startsWith('Bearer fake-jwt-token')) return;
+
+                // check if token is expired
+                const jwtToken = JSON.parse(atob(authHeader.split('.')[1]));
+                const tokenExpired = Date.now() > (jwtToken.exp * 1000);
+                if (tokenExpired) return;
+
+                const user = users.find(x => x.id === jwtToken.id);
+                return user;
+            }
+
+            function generateRefreshToken() {
+                const token = new Date().getTime().toString();
+
+                // add token cookie that expires in 7 days
+                const expires = new Date(Date.now() + 7*24*60*60*1000).toUTCString();
+                document.cookie = `fakeRefreshToken=${token}; expires=${expires}; path=/`;
+
+                return token;
+            }
+
+            function getRefreshToken() {
+                // get refresh token from cookie
+                return (document.cookie.split(';').find(x => x.includes('fakeRefreshToken')) || '=').split('=')[1];
             }
         });
     }
