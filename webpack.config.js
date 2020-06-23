@@ -20,6 +20,7 @@ module.exports = {
         ]
     },
     resolve: {
+        mainFiles: ['index', 'Index'],
         extensions: ['.js', '.jsx'],
         alias: {
             '@': path.resolve(__dirname, 'src/'),
