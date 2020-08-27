@@ -40,15 +40,6 @@ function create(params) {
 
 function update(id, params) {
     return fetchWrapper.put(`${baseUrl}/${id}`, params)
-        .then(utility => {
-            // update stored user if the logged in user updated their own record
-            if (utility.id === utilitySubject.value.id) {
-                // publish updated user to subscribers
-                utility = { ...utilitySubject.value, ...utility };
-                utilitySubject.next(utility);
-            }
-            return utility;
-        });
 }
 
 // prefixed with underscore because 'delete' is a reserved word in javascript
