@@ -18,12 +18,12 @@ export const utilitiesService = {
     get utilityValue () { return utilitySubject.value }
 };
 
-function enable() {
-    return fetchWrapper.get(`${baseUrl}/enable`);
+function enable(id) {
+    return fetchWrapper.post(`${baseUrl}/enable/${id}`);
 }
 
-function disable() {
-    return fetchWrapper.get(`${baseUrl}/disable`);
+function disable(id) {
+    return fetchWrapper.post(`${baseUrl}/disable/${id}`);
 }
 
 function getAll() {

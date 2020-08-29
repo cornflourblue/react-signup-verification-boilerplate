@@ -12,6 +12,18 @@ function List({ match }) {
         utilitiesService.getAll().then(x => setUtilities(x));
     }, []);
 
+    function enableUtility(id) {
+        utilitiesService.enable(id).then(() => {
+            utilitiesService.getAll().then(x => setUtilities(x));
+        });
+    }
+
+    function disableUtility(id) {
+        utilitiesService.disable(id).then(() => {
+            utilitiesService.getAll().then(x => setUtilities(x));
+        });
+    }
+
     function deleteUtility(id) {
         setUtilities(utilities.map(x => {
             if (x.id === id) { x.isDeleting = true; }
@@ -27,10 +39,23 @@ function List({ match }) {
         else if (!status) { return <span role="img" aria-label="red-circle">🔴</span>; }
         else { return <span role="img" aria-label="warning">⚠️</span>; }
     }
+    
+    function toggleUtility(id, status) {
+        if (status) {
+            disableUtility(id)
+        } else if (!status) {
+            enableUtility(id)
+        }
+    }
+
+    function defaultChecked(status) {
+        if (status) { return "checked"; }
+        else { return null; }
+    }
 
     function parseDateTime(timestamp) {
         return <Moment fromNow>{timestamp}</Moment>;
-    }
+    }  
 
     return (
         <div>
@@ -49,12 +74,15 @@ function List({ match }) {
                 <tbody>
                     {utilities && utilities.map(utility =>
                         <tr key={utility.id}>
-                            <td  className="text-center">{utilityStatus(utility.status)}</td>
-                            <td>{utility.name}</td>
-                            <td>{parseDateTime(utility.modified)}</td>
-                            <td style={{ whiteSpace: 'nowrap' }}>
-                                <Link to={`${path}/edit/${utility.id}`} className="btn btn-sm btn-primary mr-1">Edit</Link>
-                                <button onClick={() => deleteUtility(utility.id)} className="btn btn-sm btn-danger" style={{ width: '60px' }} disabled={utility.isDeleting}>
+                            <td className="text-center align-middle">{utilityStatus(utility.status)}</td>
+                            <td className="align-middle">{utility.name}</td>
+                            <td className="align-middle">{parseDateTime(utility.modified)}</td>
+                            <td className="align-middle" style={{ whiteSpace: 'nowrap' }}>
+                                <div className="d-inline custom-control custom-switch mr-2 align-middle">
+                                    <input type="checkbox" onClick={() => toggleUtility(utility.id, utility.status)} defaultChecked={defaultChecked(utility.status)} className="custom-control-input" id={utility.id}/>
+                                    <label className="custom-control-label" htmlFor={utility.id}/>
+                                </div>
+                                <button onClick={() => deleteUtility(utility.id)} className="d-inline btn btn-sm btn-danger" style={{ width: '60px' }} disabled={utility.isDeleting}>
                                     {utility.isDeleting 
                                         ? <span className="spinner-border spinner-border-sm"></span>
                                         : <span>Delete</span>

@@ -11,7 +11,7 @@ function AddEdit({ history, match }) {
     
     const initialValues = {
         name: '',
-        status: ''
+        status: 'true'
     };
 
     const validationSchema = Yup.object().shape({
@@ -76,9 +76,12 @@ function AddEdit({ history, match }) {
                                 <Field name="name" type="text" className={'form-control' + (errors.name && touched.name ? ' is-invalid' : '')} />
                                 <ErrorMessage name="name" component="div" className="invalid-feedback" />
                             </div>
-                            <div className="form-group col-5">
+                            <div className="form-group col-2">
                                 <label>Utility Status</label>
-                                <Field name="status" type="text" className={'form-control' + (errors.status && touched.status ? ' is-invalid' : '')} />
+                                <Field name="status" as="select" className={'form-control' + (errors.status && touched.status ? ' is-invalid' : '')}>
+                                    <option value="true">Enabled</option>
+                                    <option value="false">Disabled</option>
+                                </Field>
                                 <ErrorMessage name="status" component="div" className="invalid-feedback" />
                             </div>
                         </div>
