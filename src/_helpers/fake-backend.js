@@ -3,7 +3,7 @@ import { alertService } from '@/_services';
 
 // array in local storage for registered users
 const usersKey = 'react-signup-verification-boilerplate-users';
-const users = JSON.parse(localStorage.getItem(usersKey)) || [];
+let users = JSON.parse(localStorage.getItem(usersKey)) || [];
 
 export function configureFakeBackend() {
     let realFetch = window.fetch;
@@ -260,6 +260,7 @@ export function configureFakeBackend() {
                 user.id = newUserId();
                 user.dateCreated = new Date().toISOString();
                 user.isVerified = true;
+                user.refreshTokens = [];
                 delete user.confirmPassword;
                 users.push(user);
                 localStorage.setItem(usersKey, JSON.stringify(users));

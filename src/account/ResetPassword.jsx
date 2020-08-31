@@ -80,7 +80,7 @@ function ResetPassword({ history }) {
                                     {isSubmitting && <span className="spinner-border spinner-border-sm mr-1"></span>}
                                     Reset Password
                                 </button>
-                                <Link to="/login" className="btn btn-link">Cancel</Link>
+                                <Link to="login" className="btn btn-link">Cancel</Link>
                             </div>
                         </div>
                     </Form>
