@@ -13,10 +13,13 @@
     "dependencies": {
         "formik": "^2.1.4",
         "history": "^4.10.1",
+        "moment": "^2.27.0",
+        "moment-timezone": "^0.5.31",
         "prop-types": "^15.7.2",
         "query-string": "^6.11.0",
         "react": "^16.8.6",
         "react-dom": "^16.8.6",
+        "react-moment": "^0.9.7",
         "react-router-dom": "^5.0.0",
         "rxjs": "^6.3.3",
         "yup": "^0.28.1"
