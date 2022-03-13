@@ -115,7 +115,7 @@ let refreshTokenTimeout;
 
 function startRefreshTokenTimer() {
     // parse json object from base64 encoded jwt token
-    const jwtToken = JSON.parse(atob(userSubject.value.jwtToken.split('.')[1]));
+    const jwtToken = JSON.parse( Buffer.from(userSubject.value.jwtToken.split(".")[1], 'base64') );
 
     // set a timeout to refresh the token a minute before it expires
     const expires = new Date(jwtToken.exp * 1000);
